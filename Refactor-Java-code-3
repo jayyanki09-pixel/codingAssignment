@@ -1,0 +1,44 @@
+//Junior automation engineer was asked to implement a utility method that: 
+//1. accepts a string that includes from 0 to N words of a name 
+//2. returns a string that represents the first letter from each word in the name followed by "." For example: "Bruno Mars" → "B.M." 
+//"Dave M Jones" → "D.M.J." 
+//"MichaelSmith" → "M." 
+//Please, review his implementation, see if there is a room for improvement and refactor it. 
+
+
+//public class NameUtility { 
+//public static String convertNameToInitials(String name) { 
+//int firstSpace = name.indexOf(" "); 
+//int lastSpace = name.lastIndexOf(" "); 
+//String firstName = name.substring(0, firstSpace); 
+//String middleName = name.substring(firstSpace, lastSpace); 
+//String lastName = name.substring(lastSpace); 
+//String initials = firstName + "." + middleName + "." + lastName + "."; 
+//return initials; 
+//} 
+//}
+
+//Solution:
+//The junior engineer’s implementation has several problems:
+
+//It assumes the name will always have at least two spaces, it causes errors when the name has fewer words.
+//It doesn’t correctly extract the first letter of each word but rather substrings.
+//It doesn’t handle edge cases (empty string, single word without spaces, multiple spaces, etc.).
+
+public class NameUtility {
+    public static String convertNameToInitials(String name) {
+        if (name == null || name.trim().isEmpty()) {
+            return "";
+        }
+        String[] words = name.trim().split("\\s+");
+        StringBuilder initials = new StringBuilder();
+        for (String word : words) {
+            if (!word.isEmpty()) {
+                initials.append(Character.toUpperCase(word.charAt(0))).append(".");
+            }
+        }
+        return initials.toString();
+    }
+}
+
+
