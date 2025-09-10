@@ -1,0 +1,50 @@
+//Assignment #2: API Automation 
+//Java & any libraries of your choice 
+//Endpoint: https://api.restful-api.dev/objects 
+//Automate test that: 
+//1. sends GET request to the specified endpoint 
+//2. validates that "id" values are unique in the list of returned objects 
+//3. validates that each “name” value contains “Apple” 
+
+//The below solution is made assuming we are using Maven project and we have all the required dependencies in pom.xml
+
+import io.restassured.RestAssured;
+import io.restassured.response.Response;
+import org.testng.Assert;
+import org.testng.annotations.Test;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+public class ApiValidationTest {
+
+    private static final String ENDPOINT = "https://api.restful-api.dev/objects";
+
+    @Test
+    public void testUniqueIdsAndNameContainsApple() {
+        // Step 1: Send GET request
+        Response response = RestAssured.get(ENDPOINT);
+        Assert.assertEquals(response.getStatusCode(), 200, "Expected HTTP status 200");
+
+        // Step 2: Extract list of objects
+        List<Integer> idList = response.jsonPath().getList("id");
+        List<String> nameList = response.jsonPath().getList("name");
+
+        // Step 3: Validate "id" uniqueness
+        Set<Integer> uniqueIds = new HashSet<>(idList);
+        Assert.assertEquals(uniqueIds.size(), idList.size(), "IDs are not unique!");
+
+        // Step 4: Validate "name" contains "Apple"
+        for (String name : nameList) {
+            Assert.assertTrue(name.toLowerCase().contains("apple"),
+                    "Name does not contain 'Apple': " + name);
+        }
+
+        System.out.println("All validations passed successfully.");
+    }
+}
+
+
+
+
