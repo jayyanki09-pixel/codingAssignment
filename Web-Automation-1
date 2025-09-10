@@ -1,0 +1,123 @@
+//Assignment #1: Web Automation 
+//Java & Selenium 
+//You begin a new automation project from scratch. There is no automation framework yet. You need to automate the test: 
+//1.Navigate to: https://www.ikea.com/us/en 
+//2. Using search bar at the top of the page - search for "sofa" 
+//3. On the first page of search results, pick the 1st item in the list and add it to the cart 
+//4. Using search bar at the top of the page - search for "table" 
+//5. On the first page of search results, pick the 3rd item in the list and add it to the cart 
+//6. Navigate to shopping cart page and validate that 2 items are added to the cart 
+//7. Click on "Apply discount code" link, enter random string of 15 characters as discount code and click "Apply discount" button 
+//8. Validate that "invalid coupon code" error message is displayed 
+
+
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
+
+import java.time.Duration;
+import java.util.List;
+import java.util.Random;
+
+public class IkeaAutomationTest {
+
+    public static void main(String[] args) {
+        // Set path to chromedriver executable
+        System.setProperty("webdriver.chrome.driver", "/path/to/chromedriver");
+
+        WebDriver driver = new ChromeDriver();
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(20));
+        driver.manage().window().maximize();
+
+        try {
+            // Step 1: Navigate to IKEA site
+            driver.get("https://www.ikea.com/us/en");
+
+            // Step 2: Search for "sofa" and add 1st result to cart
+            searchAndAddToCart(driver, wait, "sofa", 1);
+
+            // Step 3: Search for "table" and add 3rd result to cart
+            searchAndAddToCart(driver, wait, "table", 3);
+
+            // Step 4: Go to cart page
+            WebElement cartIcon = wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector("[aria-label='Shopping cart']")));
+            cartIcon.click();
+
+            // Step 5: Validate that 2 items are in the cart
+            wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(".pip-item"))); // Wait for cart items to load
+            List<WebElement> cartItems = driver.findElements(By.cssSelector(".pip-item"));
+            if (cartItems.size() == 2) {
+                System.out.println("Validation Passed: 2 items are present in the cart.");
+            } else {
+                System.out.println("Validation Failed: Expected 2 items but found " + cartItems.size());
+            }
+
+            // Step 6: Apply invalid discount code
+            WebElement applyCouponLink = wait.until(ExpectedConditions.elementToBeClickable(By.linkText("Apply discount code")));
+            applyCouponLink.click();
+
+            WebElement couponInput = wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("discountCode")));
+            String randomCode = generateRandomString(15);
+            couponInput.sendKeys(randomCode);
+
+            WebElement applyCouponButton = driver.findElement(By.cssSelector("[data-test='apply-discount-button']"));
+            applyCouponButton.click();
+
+            // Step 7: Validate "invalid coupon code" error message
+            WebElement errorMsg = wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(".discount-codes .message.error")));
+            if (errorMsg.getText().toLowerCase().contains("invalid")) {
+                System.out.println("Validation Passed: Invalid coupon error is displayed.");
+            } else {
+                System.out.println("Validation Failed: Error message not displayed as expected.");
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            driver.quit();
+        }
+    }
+
+    private static void searchAndAddToCart(WebDriver driver, WebDriverWait wait, String searchKeyword, int resultIndex) {
+        // Locate search bar, type search keyword, and submit
+        WebElement searchBox = wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector("[name='q']")));
+        searchBox.clear();
+        searchBox.sendKeys(searchKeyword);
+        searchBox.submit();
+
+        // Wait for results to load
+        wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(".plp-product-list")));
+
+        // Get search result items
+        List<WebElement> products = driver.findElements(By.cssSelector(".product-compact"));
+
+        // Scroll into view of the desired product
+        WebElement desiredProduct = products.get(resultIndex - 1);
+        ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(true);", desiredProduct);
+
+        desiredProduct.click();
+
+        // Wait for product page to load and click "Add to cart"
+        WebElement addToCartBtn = wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector("[data-test='add-to-cart-button']")));
+        addToCartBtn.click();
+
+        // Wait until cart is updated (optional: wait for some notification)
+        wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(".added-to-cart")));
+    }
+
+    private static String generateRandomString(int length) {
+        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        StringBuilder randomStr = new StringBuilder();
+        Random rnd = new Random();
+        for (int i = 0; i < length; i++) {
+            randomStr.append(chars.charAt(rnd.nextInt(chars.length())));
+        }
+        return randomStr.toString();
+    }
+}
+
+
